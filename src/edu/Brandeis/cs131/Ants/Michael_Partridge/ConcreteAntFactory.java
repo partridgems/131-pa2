@@ -1,4 +1,4 @@
-package edu.Brandeis.cs131.Ants.YourName;
+package edu.Brandeis.cs131.Ants.Michael_Partridge;
 
 import edu.Brandeis.cs131.Ants.AbstractAnts.Animal;
 import edu.Brandeis.cs131.Ants.AbstractAnts.AntFactory;
