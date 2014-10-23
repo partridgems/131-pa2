@@ -1,7 +1,7 @@
 package edu.Brandeis.cs131.Ants;
 
 import edu.Brandeis.cs131.Ants.AbstractAnts.AntFactory;
-import edu.Brandeis.cs131.Ants.GradyWard.ConcreteAntFactory;
+import edu.Brandeis.cs131.Ants.MichaelPartridge.ConcreteAntFactory;
 
 public class AntFactoryProxy {
 
