@@ -49,6 +49,7 @@ public class BasicAnthill extends Anthill {
 				}
 			}
 			localAnimals.add(animal);
+			this.eatAnt();
 			return true;
 
 		} else if (animal instanceof Anteater) {
@@ -59,6 +60,7 @@ public class BasicAnthill extends Anthill {
 				}
 			}
 			localAnimals.add(animal);
+			this.eatAnt();
 			return true;
 
 		} else if (animal instanceof Armadillo) {
@@ -69,11 +71,13 @@ public class BasicAnthill extends Anthill {
 				if (a instanceof Armadillo) {
 					return false;
 				} else if (a instanceof Aardvark || a instanceof Anteater) {
+
 					company = true;
 				}
 			}
 			if (company) {
 				localAnimals.add(animal);
+				this.eatAnt();
 				return true;
 			}
 			return false;
