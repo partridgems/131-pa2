@@ -17,6 +17,11 @@ public class Aardvark extends Animal {
 	public Aardvark(String name, Colour color) {
 		super(name, color, Aardvark.PRIORITY, Aardvark.SPEED, Aardvark.STARTING_HUNGER);
 	}
+	
+    @Override
+    public String toString() {
+        return String.format("%s AARDVARK %s", this.getColour(), this.getName());
+    }
 
 
 }

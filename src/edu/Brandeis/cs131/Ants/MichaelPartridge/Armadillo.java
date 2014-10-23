@@ -18,5 +18,10 @@ public class Armadillo extends Animal {
 	public Armadillo(String name, Colour color) {
 		super(name, color, Armadillo.PRIORITY, Armadillo.SPEED, Armadillo.STARTING_HUNGER);
 	}
+	
+    @Override
+    public String toString() {
+        return String.format("%s ARMADILLO %s", this.getColour(), this.getName());
+    }
 
 }

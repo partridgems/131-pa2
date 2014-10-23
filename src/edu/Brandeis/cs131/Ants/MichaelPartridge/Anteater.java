@@ -18,5 +18,10 @@ public class Anteater extends Animal {
 	public Anteater(String name, Colour color) {
 		super(name, color, Anteater.PRIORITY, Anteater.SPEED, Anteater.STARTING_HUNGER);
 	}
+	
+    @Override
+    public String toString() {
+        return String.format("%s ANTEATER %s", this.getColour(), this.getName());
+    }
 
 }
