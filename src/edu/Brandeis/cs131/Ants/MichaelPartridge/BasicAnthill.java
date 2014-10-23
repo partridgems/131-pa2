@@ -48,6 +48,8 @@ public class BasicAnthill extends Anthill {
 					return false;
 				}
 			}
+			
+			//Enter anthill
 			localAnimals.add(animal);
 			this.eatAnt();
 			return true;
@@ -59,28 +61,30 @@ public class BasicAnthill extends Anthill {
 					return false;
 				}
 			}
+			
+			//Enter anthill
 			localAnimals.add(animal);
 			this.eatAnt();
 			return true;
 
 		} else if (animal instanceof Armadillo) {
 			//Ensure at least one Aardvark or Anteater is present
-			//Ensure no Armadillo is present
-			boolean company = false;
+			
+			//Is anyone else here?
+			if (localAnimals.size() == 0) {
+				return false;
+			}
+			//If someone else was here, are they an Armadillo?
 			for (Animal a : localAnimals) {
 				if (a instanceof Armadillo) {
 					return false;
-				} else if (a instanceof Aardvark || a instanceof Anteater) {
-
-					company = true;
 				}
 			}
-			if (company) {
-				localAnimals.add(animal);
-				this.eatAnt();
-				return true;
-			}
-			return false;
+			
+			//Enter anthill
+			localAnimals.add(animal);
+			this.eatAnt();
+			return true;
 
 		} else {
 			throw new RuntimeException("ERROR: unknown animal tried to eat at this hill.");
