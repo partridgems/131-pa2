@@ -11,22 +11,22 @@ public class ConcreteAntFactory implements AntFactory {
 
     @Override
     public Anthill createNewBasicAnthill(String label, int numAnts) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new BasicAnthill(label, numAnts);
     }
 
     @Override
     public Animal createNewAardvark(String label, Colour color) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new Aardvark(label, color);
     }
 
     @Override
     public Animal createNewAnteater(String label, Colour color) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    	return new Anteater(label, color);
     }
 
     @Override
     public Animal createNewArmadillo(String label, Colour color) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    	return new Armadillo(label, color);
     }
 
     @Override
