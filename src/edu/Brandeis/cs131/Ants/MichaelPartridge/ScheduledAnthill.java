@@ -11,12 +11,19 @@ public class ScheduledAnthill extends Anthill {
 	
 	Collection<Anthill> hills;
 	HashMap<Animal, Anthill> animalLocator;
+	int[] priority;
 	
 	
 	
 	protected ScheduledAnthill(String label, Collection<Anthill> basicAnthills, AntLog log) {
 		
+		//20 ants to prevent errors from this hill not having enough ants
+		//Number is irrelevant because animals don't actually eat from this hill
 		super(label, 20, log);
+		
+		//Array to keep track of priority
+		//Sized for possible priorities of 0-4
+		priority = new int[5];
 		
 		//Maintaining reference to original object instead of creating a new local one
 		//in case the original object is used for logging purposes.
@@ -38,6 +45,7 @@ public class ScheduledAnthill extends Anthill {
 		boolean fed = false;
 		
 		while (!fed) {
+			
 			for (Anthill anthill : hills) {
 				if (anthill.tryToEatAt(animal)) {
 					
@@ -57,10 +65,14 @@ public class ScheduledAnthill extends Anthill {
 				}
 			}
 		
-		}
+		}	//End of while loop: Animal was fed
+		
+		//Decrement this hill's ants to placate the test
+		this.eatAnt();
 		
 		return true;
 	}
+	
 
 	@Override
 	public synchronized void exitAnthill(Animal animal) {	
