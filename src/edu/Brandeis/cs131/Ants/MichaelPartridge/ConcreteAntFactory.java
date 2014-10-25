@@ -36,7 +36,7 @@ public class ConcreteAntFactory implements AntFactory {
 
     @Override
     public Anthill createNewScheduledAnthill(String label, Collection<Anthill> basicAnthills, AntLog log) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return new ScheduledAnthill(label, basicAnthills, log);
     }
 
     @Override
