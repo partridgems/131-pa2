@@ -9,12 +9,11 @@ import edu.Brandeis.cs131.Ants.AbstractAnts.Log.AntLog;
  * ready to leave. Anthills are responsible for indicating if it is safe for an
  * Animal to enter.
  *
- * When an animal wants to enter a anthill, it calls attemptToEatAt which
- * delegates to tryToEatAt on the anthill instance to determine constraint
- * integrity. If the animal has entered the anthill successfully, attemptToEatAt
- * returns true. Otherwise, attemptToEatAt returns false. The animal simulates
- * the time spent at the anthill, and then must call leaveAnthill on the same
- * anthill instance it entered.
+ * When an animal wants to enter a anthill, it calls tryToJoin on the anthill
+ * instance. If the animal has entered the anthill successfully, tryToJoin
+ * returns true. Otherwise, tryToJoin returns false. The animal simulates the
+ * time spent at the anthill, and then must call exitAnthill on the same anthill
+ * instance it entered.
  */
 public abstract class Anthill {
 
@@ -37,18 +36,14 @@ public abstract class Anthill {
         this(name, ants, Anthill.DEFAULT_LOG);
     }
 
-    /**
-     * Delegates the decision making to
-     *
-     * @see tryToEatAt used to update log on successful entry.
-     * @param animal
-     * @return
-     */
     public final boolean attemptToEatAt(Animal animal) {
+        int commonSig = (int) (Math.random()*Integer.MAX_VALUE);
+        log.addToLog(animal, this, AntEventType.ENTER_ATTEMPT, commonSig);
         if (this.tryToEatAt(animal)) {
-            log.addToLog(animal, this, AntEventType.ENTER);
+            log.addToLog(animal, this, AntEventType.ENTER_SUCCESS, commonSig);
             return true;
         } else {
+            log.addToLog(animal, this, AntEventType.ENTER_FAILED, commonSig);
             return false;
         }
     }
@@ -62,15 +57,10 @@ public abstract class Anthill {
      */
     public abstract boolean tryToEatAt(Animal animal);
 
-    /**
-     * Delegates to
-     *
-     * @see exitAnthill used to update the log when an animal exits.
-     * @param animal
-     */
     public final void leaveAnthill(Animal animal) {
-        this.log.addToLog(animal, this, AntEventType.LEAVE);
+        this.log.addToLog(animal, this, AntEventType.LEAVE_START);
         this.exitAnthill(animal);
+        this.log.addToLog(animal, this, AntEventType.LEAVE_END);
     }
 
     /**

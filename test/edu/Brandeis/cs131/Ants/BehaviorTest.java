@@ -1,14 +1,25 @@
 package edu.Brandeis.cs131.Ants;
 
+import edu.Brandeis.cs131.Ants.AbstractAnts.AntFactory;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Animal;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Anthill;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Colour;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Log.AntEvent;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Log.AntEventType;
 import static org.junit.Assert.assertTrue;
+import org.junit.Before;
 import org.junit.Test;
 
 public class BehaviorTest extends AntTest {
+
+    private AntFactory factory;
+
+    @Before
+    public void setUp() {
+        factory = AntFactoryProxy.getNewAntFactory();
+        Anthill.DEFAULT_LOG.clearLog();
+        //System.out.printf("%s - %s \n", factory.getClass().getCanonicalName(), this.getClass().getName());
+    }
 
     /**
      * Animal RollCall checks the basic functions of an animal. Note if the test
@@ -64,9 +75,13 @@ public class BehaviorTest extends AntTest {
         Anthill hill = factory.createNewBasicAnthill(AntFactoryProxy.mrNames[0], 15);
         AnimalEats(animal, hill);
         AntEvent logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record aardvark entering anthill", new AntEvent(animal, hill, AntEventType.ENTER).equals(logEvent));
+        assertTrue("Anthill log did not record aardvark entering anthill", new AntEvent(animal, hill, AntEventType.ENTER_ATTEMPT).weakEquals(logEvent));
         logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record aardvark leaving anthill", new AntEvent(animal, hill, AntEventType.LEAVE).equals(logEvent));
+        assertTrue("Anthill log did not record aardvark entering anthill", new AntEvent(animal, hill, AntEventType.ENTER_SUCCESS).weakEquals(logEvent));
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record aardvark leaving anthill", new AntEvent(animal, hill, AntEventType.LEAVE_START).weakEquals(logEvent));
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record aardvark leaving anthill", new AntEvent(animal, hill, AntEventType.LEAVE_END).weakEquals(logEvent));
     }
 
     @Test
@@ -75,9 +90,13 @@ public class BehaviorTest extends AntTest {
         Anthill hill = factory.createNewBasicAnthill(AntFactoryProxy.mrNames[0], 15);
         AnimalEats(animal, hill);
         AntEvent logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record anteater entering anthill", new AntEvent(animal, hill, AntEventType.ENTER).equals(logEvent));
+        assertTrue("Anthill log did not record anteater entering anthill", new AntEvent(animal, hill, AntEventType.ENTER_ATTEMPT).weakEquals(logEvent));
         logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record anteater leaving anthill", new AntEvent(animal, hill, AntEventType.LEAVE).equals(logEvent));
+        assertTrue("Anthill log did not record anteater entering anthill", new AntEvent(animal, hill, AntEventType.ENTER_SUCCESS).weakEquals(logEvent));
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record anteater leaving anthill", new AntEvent(animal, hill, AntEventType.LEAVE_START).weakEquals(logEvent));
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record anteater leaving anthill", new AntEvent(animal, hill, AntEventType.LEAVE_END).weakEquals(logEvent));
     }
 
     @Test
@@ -91,13 +110,21 @@ public class BehaviorTest extends AntTest {
         AnimalEats(armadillo, hill);
         hill.leaveAnthill(anteater);
         AntEvent logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record anteater entering anthill", new AntEvent(anteater, hill, AntEventType.ENTER).equals(logEvent));
+        assertTrue("Anthill log did not record anteater entering anthill", new AntEvent(anteater, hill, AntEventType.ENTER_ATTEMPT).weakEquals(logEvent));
         logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record armadillo entering anthill", new AntEvent(armadillo, hill, AntEventType.ENTER).equals(logEvent));;
+        assertTrue("Anthill log did not record anteater entering anthill", new AntEvent(anteater, hill, AntEventType.ENTER_SUCCESS).weakEquals(logEvent));
         logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record armadillo leaving anthill", new AntEvent(armadillo, hill, AntEventType.LEAVE).equals(logEvent));
+        assertTrue("Anthill log did not record armadillo entering anthill", new AntEvent(armadillo, hill, AntEventType.ENTER_ATTEMPT).weakEquals(logEvent));;
         logEvent = Anthill.DEFAULT_LOG.get();
-        assertTrue("Anthill log did not record anteater leaving anthill", new AntEvent(anteater, hill, AntEventType.LEAVE).equals(logEvent));
+        assertTrue("Anthill log did not record armadillo entering anthill", new AntEvent(armadillo, hill, AntEventType.ENTER_SUCCESS).weakEquals(logEvent));;
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record armadillo leaving anthill", new AntEvent(armadillo, hill, AntEventType.LEAVE_START).weakEquals(logEvent));
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record armadillo leaving anthill", new AntEvent(armadillo, hill, AntEventType.LEAVE_END).weakEquals(logEvent));        
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record anteater leaving anthill", new AntEvent(anteater, hill, AntEventType.LEAVE_START).weakEquals(logEvent));
+        logEvent = Anthill.DEFAULT_LOG.get();
+        assertTrue("Anthill log did not record anteater leaving anthill", new AntEvent(anteater, hill, AntEventType.LEAVE_END).weakEquals(logEvent));
     }
 
     @Test

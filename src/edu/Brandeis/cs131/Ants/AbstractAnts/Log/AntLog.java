@@ -12,6 +12,15 @@ public class AntLog {
     public AntLog() {
     }
 
+    public void addToLog(Animal animal, Anthill anthill, AntEventType type, int sig) {
+        try {
+            log.put(new AntEvent(animal, anthill, type, sig));
+        } catch (InterruptedException ex) {
+            add_error_msg();
+            ex.printStackTrace();
+        }
+    }
+    
     public void addToLog(Animal animal, Anthill anthill, AntEventType type) {
         try {
             log.put(new AntEvent(animal, anthill, type));
@@ -64,4 +73,14 @@ public class AntLog {
         }
         return next;
     }
+    
+    public boolean contains(AntEvent event){
+        return log.contains(event);
+    }
+    
+    public AntEvent peek(){
+        return log.peek();
+    }
+    
+    
 }

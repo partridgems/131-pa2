@@ -11,21 +11,22 @@ import edu.Brandeis.cs131.Ants.AbstractAnts.Log.DummyLog;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SimulationAnthillTest {
 
-    protected AntFactory factory;
+    private AntFactory factory;
+    public static boolean DEBUG_MODE = false;
 
     @Before
     public void setUp() {
         factory = AntFactoryProxy.getNewAntFactory();
         Anthill.DEFAULT_LOG.clearLog();
-        //System.out.printf("%s - %s \n", factory.getClass().getCanonicalName(), this.getClass().getName());
     }
 
     @Test
@@ -135,13 +136,17 @@ public class SimulationAnthillTest {
         private final AntLog log;
         private final Collection<Animal> satisfiedAnimals;
         private Map<Anthill, Collection<Animal>> anthills;
-        private List<String> errors;
+        private Map<Integer, AntEvent> potential_entry_events;
+        private Map<Anthill, Collection<Animal>> exitSet;
+        private Set<String> errors;
 
         public AntLogVerifier(AntLog log) {
             this.log = log;
             this.anthills = new HashMap<Anthill, Collection<Animal>>();
+            this.potential_entry_events = new HashMap<Integer, AntEvent>();
+            this.exitSet = new HashMap<Anthill, Collection<Animal>>();
             this.satisfiedAnimals = new ArrayList<Animal>();
-            this.errors = new ArrayList<String>();
+            this.errors = new HashSet<String>();
         }
 
         @Override
@@ -151,17 +156,35 @@ public class SimulationAnthillTest {
                 currentEvent = log.get();
                 Animal curAnimal = currentEvent.getAnimal();
                 Anthill curAnthill = currentEvent.getAnthill();
+                if (curAnthill != null) {
+                    if (exitSet.get(curAnthill) == null) {
+                        exitSet.put(curAnthill, new ArrayList<Animal>());
+                    }
+                    if (anthills.get(curAnthill) == null) {
+                        anthills.put(curAnthill, new ArrayList<Animal>());
+                    }
+                }
+                if(SimulationAnthillTest.DEBUG_MODE && (!currentEvent.getEvent().equals(AntEventType.ENTER_ATTEMPT) && !currentEvent.getEvent().equals(AntEventType.ENTER_FAILED) && !currentEvent.getEvent().equals(AntEventType.LEAVE_START))){
+                    System.out.println(currentEvent.toString());
+                }
                 switch (currentEvent.getEvent()) {
-                    case ENTER:
+                    case ENTER_ATTEMPT:
+                        potential_entry_events.put(currentEvent.getSignifier(), currentEvent);
+                        break;
+                    case ENTER_SUCCESS:
+                        potential_entry_events.remove(currentEvent.getSignifier());
                         checkEnterConditions(curAnimal, curAnthill);
-                        if (anthills.get(curAnthill) == null) {
-                            anthills.put(curAnthill, new ArrayList<Animal>());
-                        }
                         anthills.get(curAnthill).add(curAnimal);
                         break;
-                    case LEAVE:
+                    case ENTER_FAILED:
+                        potential_entry_events.remove(currentEvent.getSignifier());
+                        break;
+                    case LEAVE_START:
                         checkLeaveConditions(curAnimal, curAnthill);
                         anthills.get(curAnthill).remove(curAnimal);
+                        exitSet.get(curAnthill).add(curAnimal);
+                    case LEAVE_END:
+                        exitSet.get(curAnthill).remove(curAnimal);
                         break;
                     case FULL:
                         satisfiedAnimals.add(curAnimal);
@@ -180,14 +203,41 @@ public class SimulationAnthillTest {
             if (satisfiedAnimals.contains(newAnimal)) {
                 errors.add(String.format("%s entered %s when the animal is full.", newAnimal, toAnthill));
             }
-            if (isArmadillo(newAnimal)) {
-                checkArmadilloEntry(newAnimal, toAnthill);
-            }
+
+
             if (isAnteater(newAnimal)) {
-                checkAnteaterEntry(newAnimal, toAnthill);
+                this.errors.addAll(verifyAnteaterEntry(newAnimal, toAnthill.toString(), anthills.get(toAnthill)));
             }
             if (isAardvark(newAnimal)) {
-                checkAaardvarkEntry(newAnimal, toAnthill);
+                this.errors.addAll(verifyAardvarkEntry(newAnimal, toAnthill.toString(), anthills.get(toAnthill)));
+            }
+            if (isArmadillo(newAnimal)) {
+                //Armadillos complicate everything!
+                //Armadillos are much more dependat on current occupants of an anthill then the other animals
+                //As such we evaluate all 4 possible states of the anthill based on the log
+                //And if any of them are valid, we presume this event happened in that timeslot
+                Collection<Animal> known_occupants = anthills.get(toAnthill);
+                Collection<Animal> potential_entry = this.buildPotentialEntrants(toAnthill);
+                Collection<Animal> potential_exit = new HashSet<Animal>();
+                Collection<Animal> potential_both = new HashSet<Animal>();
+
+                potential_exit.addAll(known_occupants);
+                potential_entry.addAll(known_occupants);
+                potential_both.addAll(potential_entry);
+
+                potential_exit.addAll(exitSet.get(toAnthill));
+                potential_both.addAll(exitSet.get(toAnthill));
+
+                Collection<String> known_set_errors = verifyArmadilloEntry(newAnimal, toAnthill.toString(), known_occupants);
+                Collection<String> enter_set_errors = verifyArmadilloEntry(newAnimal, toAnthill.toString(), potential_entry);
+                Collection<String> exit_set_errors = verifyArmadilloEntry(newAnimal, toAnthill.toString(), potential_exit);
+                Collection<String> both_set_errors = verifyArmadilloEntry(newAnimal, toAnthill.toString(), potential_both);
+                if (!known_set_errors.isEmpty() && !enter_set_errors.isEmpty() && !exit_set_errors.isEmpty() && !both_set_errors.isEmpty()) {
+                    this.errors.addAll(known_set_errors);
+                    this.errors.addAll(enter_set_errors);
+                    this.errors.addAll(exit_set_errors);
+                    this.errors.addAll(both_set_errors);
+                }
             }
         }
 
@@ -201,11 +251,11 @@ public class SimulationAnthillTest {
             }
         }
 
-        private void checkAaardvarkEntry(Animal aardvark, Anthill anthill) {
-            Collection<Animal> currentOccupants = anthills.get(anthill);
-            if (currentOccupants != null && !currentOccupants.isEmpty()) {
+        private Collection<String> verifyAardvarkEntry(Animal aardvark, String anthill, Collection<Animal> occupants) {
+            Collection<String> errors = new ArrayList<String>();
+            if (occupants != null && !occupants.isEmpty()) {
                 int aardvarkCount = 0;
-                for (Animal din : currentOccupants) {
+                for (Animal din : occupants) {
                     if (isAnteater(din)) {
                         errors.add(String.format("%s entered %s with %s.", aardvark, anthill, din));
                     }
@@ -220,12 +270,13 @@ public class SimulationAnthillTest {
                     }
                 }
             }
+            return errors;
         }
 
-        private void checkAnteaterEntry(Animal anteater, Anthill anthill) {
-            Collection<Animal> currentOccupants = anthills.get(anthill);
-            if (currentOccupants != null && !currentOccupants.isEmpty()) {
-                for (Animal din : currentOccupants) {
+        private Collection<String> verifyAnteaterEntry(Animal anteater, String anthill, Collection<Animal> occupants) {
+            Collection<String> errors = new ArrayList<String>();
+            if (occupants != null && !occupants.isEmpty()) {
+                for (Animal din : occupants) {
                     if (!isArmadillo(din)) {
                         errors.add(String.format("%s entered %s with %s.", anteater, anthill, din));
                     }
@@ -234,14 +285,15 @@ public class SimulationAnthillTest {
                     }
                 }
             }
+            return errors;
         }
 
-        private void checkArmadilloEntry(Animal armadillo, Anthill anthill) {
-            Collection<Animal> currentOccupants = anthills.get(anthill);
-            if (currentOccupants == null || currentOccupants.isEmpty()) {
+        private Collection<String> verifyArmadilloEntry(Animal armadillo, String anthill, Collection<Animal> occupants) {
+            Collection<String> errors = new ArrayList<String>();
+            if (occupants == null || occupants.isEmpty()) {
                 errors.add(String.format("%s entered %s when it is empty. Armadillo must have company.", armadillo, anthill));
             }
-            for (Animal din : currentOccupants) {
+            for (Animal din : occupants) {
                 if (armadillo.getColour().equals(din.getColour())) {
                     errors.add(String.format("%s entered %s with animals of the same color.", armadillo, anthill));
                 }
@@ -249,6 +301,7 @@ public class SimulationAnthillTest {
                     errors.add(String.format("%s entered %s with another armadillo (%s).", armadillo, anthill, din));
                 }
             }
+            return errors;
         }
 
         private boolean isAardvark(Animal animal) {
@@ -279,8 +332,37 @@ public class SimulationAnthillTest {
                 builder.append(er);
                 builder.append("\n");
             }
-            System.out.println(builder);
             return builder.toString();
+        }
+
+        private Set<Animal> buildPotentialEntrants(Anthill hill) {
+            Set<Animal> fluxEntrants = new HashSet<Animal>();
+            for (AntEvent event : this.potential_entry_events.values()) {
+                if (event.getAnthill().getName().equals(hill.getName())) {
+                    if (waitAndRetrieveEnterResult(event)) {
+                        fluxEntrants.add(event.getAnimal());
+                    }
+                }
+            }
+            return fluxEntrants;
+        }
+
+        private boolean waitAndRetrieveEnterResult(AntEvent event) {
+            AntEvent success = new AntEvent(event.getAnimal(), event.getAnthill(), AntEventType.ENTER_SUCCESS, event.getSignifier());
+            AntEvent failure = new AntEvent(event.getAnimal(), event.getAnthill(), AntEventType.ENTER_FAILED, event.getSignifier());
+            while (true) {
+                if (this.log.contains(success)) {
+                    return true;
+                }
+                if (this.log.contains(failure)) {
+                    return false;
+                }
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 }

@@ -42,7 +42,7 @@ public class AntTest {
         while (!Anthill.DEFAULT_LOG.isEmpty()) {
             lastEvent = Anthill.DEFAULT_LOG.get();
         }
-        assertTrue("Anthill log did not record anteater leaving anthill", new AntEvent(animal, AntEventType.FULL).equals(lastEvent));
+        assertTrue("Anthill log did not record animal becomes satisfied.", new AntEvent(animal, AntEventType.FULL).weakEquals(lastEvent));
     }
 
     @Test

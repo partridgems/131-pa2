@@ -2,20 +2,25 @@ package edu.Brandeis.cs131.Ants.AbstractAnts.Log;
 
 import edu.Brandeis.cs131.Ants.AbstractAnts.Animal;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Anthill;
-import java.util.Date;
 
 public class AntEvent {
 
     private final Animal animal;
     private final Anthill anthill;
     private final AntEventType event;
-    private final Date time;
+    private final int signifier;
+    //there is no guarantee the signifier is 100% unique
+    //but given the size of our tests vs the possible values for the signifier we forsee little clashing
 
-    public AntEvent(Animal animal, Anthill anthill, AntEventType event) {
+    public AntEvent(Animal animal, Anthill anthill, AntEventType event, int signifier) {
         this.animal = animal;
         this.anthill = anthill;
         this.event = event;
-        this.time = new Date();
+        this.signifier = signifier;
+    }
+
+    public AntEvent(Animal animal, Anthill anthill, AntEventType event) {
+        this(animal, anthill, event, (int) System.currentTimeMillis());
     }
 
     public AntEvent(Animal animal, AntEventType event) {
@@ -37,9 +42,9 @@ public class AntEvent {
     public AntEventType getEvent() {
         return event;
     }
-
-    public Date getEventTime() {
-        return time;
+    
+    public int getSignifier() {
+        return signifier;
     }
 
     @Override
@@ -59,9 +64,16 @@ public class AntEvent {
     public boolean equals(Object o) {
         if (o instanceof AntEvent) {
             AntEvent event = (AntEvent) o;
-            return this.toString().equals(event.toString());
+            return event.getSignifier() == this.signifier && this.weakEquals(event);
         } else {
             return false;
         }
+
+    }
+
+    public boolean weakEquals(AntEvent event) {
+        //A weaker version of equals,  checks the anthill, animal, and event type are the same.
+        //Useful for checking if an event was logged, when the exact logging details are unknown.
+        return this.toString().equals(event.toString());
     }
 }
