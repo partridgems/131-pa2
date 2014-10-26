@@ -68,6 +68,10 @@ public class ScheduledAnthill extends Anthill {
 					synchronized (this) {
 						//Someone is waiting ahead of this animal
 						try {
+							//Wake someone else up to try
+							this.notify();
+							
+							//Sleep until this animal's turn
 							this.wait();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -150,7 +154,7 @@ public class ScheduledAnthill extends Anthill {
 
 		//Wake up next animal waiting for food (that animal will handle priority)
 		synchronized (this) {
-			this.notifyAll();
+			this.notify();
 		}
 
 	}	//End of exitAnthill()
