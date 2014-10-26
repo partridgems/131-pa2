@@ -11,9 +11,9 @@ public class ScheduledAnthill extends Anthill {
 
 	private Collection<Anthill> hills;
 	private HashMap<Animal, Anthill> animalLocator;
-	
-	private volatile int pri2waiting;
-	
+
+	private volatile int[] highPriorityWaitCount;
+
 
 
 	private int ants;
@@ -30,29 +30,17 @@ public class ScheduledAnthill extends Anthill {
 		}
 
 
-		pri2waiting = 0;
+		//Keeps track of number of high priority animals waiting
+		highPriorityWaitCount = new int[5];
 
 		//Maintaining reference to original object instead of creating a new local one
 		//in case the original object is used for logging purposes.
-		hills = basicAnthills;
+		this.hills = basicAnthills;
 
-		//Tracker to locate animals efficiently
+		//Tracker to locate animals efficiently for exiting
 		animalLocator = new HashMap<Animal, Anthill>();
 
-
-	}
-	
-//	private Object getQueue (Animal animal) {
-//		if (animal instanceof Armadillo) {
-//			return armadilloQueue;
-//		} else if (animal instanceof Anteater) {
-//			return anteaterQueue;
-//		} else if (animal instanceof Aardvark) {
-//			return aardvarkQueue;
-//		} else {
-//			return null;
-//		}
-//	}
+	}	//End of constructor()
 
 
 
@@ -61,31 +49,24 @@ public class ScheduledAnthill extends Anthill {
 
 		boolean fed = false;
 
-		//First check for higher priority animals waiting
-		
-		if (animal instanceof Aardvark) {
-			
-//			System.out.println("Aardvark priority check, pri2waiting is " + pri2waiting);
-			
+
+		while (!fed) {
+
 			//Check priority and sleep if higher priority animals are waiting
-			//Armadillos and Anteaters don't wait because they have highest priority
-			if (pri2waiting != 0) {
-				
-				synchronized (this) {
-					//Someone is waiting ahead of this animal
-					try {
-						this.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+			for (int p = 4; p > animal.getPriority(); p--) {
+				if (highPriorityWaitCount[p] > 0) {
+
+					synchronized (this) {
+						//Someone is waiting ahead of this animal
+						try {
+							this.wait();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
+
 				}
 			}
-			
-		}
-		
-		while (!fed) {
-			
-//			System.out.println(animal.toString() + " trying to eat");
 
 			for (Anthill anthill : hills) {
 				if (anthill.tryToEatAt(animal)) {
@@ -99,76 +80,57 @@ public class ScheduledAnthill extends Anthill {
 					break;
 				}
 				if (fed) {
+					//Error checking
 					throw new RuntimeException("ERROR, BREAK DID NOT WORK AS EXPECTED");
 				}
-			}
+
+			}	//End of for: each anthill
+
 
 			//If not fed, animal failed to eat at any hill. Have animal wait until someone finishes
 			if (!fed) {
-				
-//				System.out.println(animal.toString() + " failed to eat. Sleeping.");
-				
+
 				synchronized (this) {
 					//Someone is waiting ahead of this animal
-					if (animal instanceof Anteater) {
-						
-						pri2waiting++;
-					}
+
+					//Add this animal's waiting to priority table
+					highPriorityWaitCount[animal.getPriority()]++;
+
 					try {
 						this.wait();
-						
-//						System.out.println(animal.toString() + " woke up, trying to eat.");
-						
+
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+
+					//Animal has awakened, remove this animal from priority table
+					highPriorityWaitCount[animal.getPriority()]--;
 				}
 			}
-			
+
 
 		}	//End of while loop: Animal was fed
-		
-//		System.out.println(animal.toString() + " successfully ate. Waking up armadillos. Hunger is now " + animal.getHunger());
-		
-		synchronized (this) {
-			//Wake up sleeping armadillos now that an animal is eating
-			this.notifyAll();
-		}
+
 		return true;
 	}
 
 
 	@Override
 	public void exitAnthill(Animal animal) {	
-		
-//		System.out.println(animal.toString() + " is leaving anthill");
 
-		//Leave anthill
+
+		//Leave ant hill tracker
 		synchronized (animalLocator) {
 			animalLocator.get(animal).exitAnthill(animal);
-			
+
 			//Remove from tracker
 			animalLocator.remove(animal);
 		}
-		
-		
-		//Decrement priority queue size of applicable
-		if (animal instanceof Anteater) {
-			pri2waiting--;
-		}
 
-		//Wake up all animals waiting for food
-		if (pri2waiting != 0) {
-			synchronized (this) {
-				this.notifyAll();
-			}
-
-		} else {
-			synchronized (this) {
-				this.notifyAll();
-			}
+		//Wake up next animal waiting for food (that animal will handle priority)
+		synchronized (this) {
+			this.notifyAll();
 		}
-		
 
 	}	//End of exitAnthill()
 
