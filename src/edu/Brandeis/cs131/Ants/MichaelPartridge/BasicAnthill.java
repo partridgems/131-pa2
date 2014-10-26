@@ -28,11 +28,13 @@ public class BasicAnthill extends Anthill {
 	@Override
 	public synchronized boolean tryToEatAt(Animal animal) {
 
+		//Nobody can eat here if there are no more ants
 		if (this.antsLeft() == 0) {
 
 			return false;
 
 		} else if (!colorCheck(animal)) {
+			//Checks for other animals of the same color
 
 			return false;
 
@@ -49,7 +51,7 @@ public class BasicAnthill extends Anthill {
 				}
 			}
 			
-			//Enter anthill
+			//Conditions met, enter anthill
 			localAnimals.add(animal);
 			this.eatAnt();
 			return true;
@@ -62,7 +64,7 @@ public class BasicAnthill extends Anthill {
 				}
 			}
 			
-			//Enter anthill
+			//Conditions met, enter anthill
 			localAnimals.add(animal);
 			this.eatAnt();
 			return true;
@@ -74,14 +76,14 @@ public class BasicAnthill extends Anthill {
 			if (localAnimals.size() == 0) {
 				return false;
 			}
-			//If someone else was here, are they an Armadillo?
+			//If someone else is here, are they an Armadillo?
 			for (Animal a : localAnimals) {
 				if (a instanceof Armadillo) {
 					return false;
 				}
 			}
 			
-			//Enter anthill
+			//Conditions met, enter anthill
 			localAnimals.add(animal);
 			this.eatAnt();
 			return true;
@@ -101,6 +103,7 @@ public class BasicAnthill extends Anthill {
 
 		Colour c = animal.getColour();
 
+		//Using == to compare enum types
 		for (Animal a : localAnimals) {
 			if (c == a.getColour()) {
 				return false;

@@ -1,5 +1,6 @@
 package edu.Brandeis.cs131.Ants.MichaelPartridge;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -9,13 +10,16 @@ import edu.Brandeis.cs131.Ants.AbstractAnts.Log.AntLog;
 
 public class ScheduledAnthill extends Anthill {
 
+	//Ant hills subordinate to this scheduler
 	private Collection<Anthill> hills;
+	
+	//Used to find animals to exit ant hills
 	private HashMap<Animal, Anthill> animalLocator;
 
-	private volatile int[] highPriorityWaitCount;
+	//Keep track of animals sleeping by priority
+	private ArrayList<Integer> highPriorityWaitCount;
 
-
-
+	//Total number of ants in all subordinate BasicAnthills
 	private int ants;
 
 
@@ -31,7 +35,11 @@ public class ScheduledAnthill extends Anthill {
 
 
 		//Keeps track of number of high priority animals waiting
-		highPriorityWaitCount = new int[5];
+		highPriorityWaitCount = new ArrayList<Integer>(5);
+		for (int i = 0; i < 5; i++) {
+			highPriorityWaitCount.add(i, 0);
+		}
+		
 
 		//Maintaining reference to original object instead of creating a new local one
 		//in case the original object is used for logging purposes.
@@ -47,14 +55,15 @@ public class ScheduledAnthill extends Anthill {
 	@Override
 	public boolean tryToEatAt(Animal animal) {
 
+		//Flag terminates feeding loop when animal successfully eats somewhere
 		boolean fed = false;
 
-
+		//Loop until animal eats
 		while (!fed) {
 
 			//Check priority and sleep if higher priority animals are waiting
 			for (int p = 4; p > animal.getPriority(); p--) {
-				if (highPriorityWaitCount[p] > 0) {
+				if (highPriorityWaitCount.get(p) > 0) {
 
 					synchronized (this) {
 						//Someone is waiting ahead of this animal
@@ -93,9 +102,12 @@ public class ScheduledAnthill extends Anthill {
 				synchronized (this) {
 					//Someone is waiting ahead of this animal
 
-					//Add this animal's waiting to priority table
-					highPriorityWaitCount[animal.getPriority()]++;
-
+					synchronized (highPriorityWaitCount) {
+						//Add this animal's waiting to priority table
+						highPriorityWaitCount.set( animal.getPriority(),
+										highPriorityWaitCount.get(animal.getPriority()) + 1 );
+					}
+					
 					try {
 						this.wait();
 
@@ -104,12 +116,21 @@ public class ScheduledAnthill extends Anthill {
 					}
 
 					//Animal has awakened, remove this animal from priority table
-					highPriorityWaitCount[animal.getPriority()]--;
+					synchronized (highPriorityWaitCount) {
+						//Add this animal's waiting to priority table
+						highPriorityWaitCount.set( animal.getPriority(),
+										highPriorityWaitCount.get(animal.getPriority()) - 1 );
+					}
+					
 				}
-			}
+				
+			}	//End of the if (!fed) waiting block.
+			
+			
+			//Animal is now awake and that is reflected in highPriorityWaitCount
 
 
-		}	//End of while loop: Animal was fed
+		}	//End of while loop: Animal was fed if this loop terminates
 
 		return true;
 	}
@@ -119,11 +140,11 @@ public class ScheduledAnthill extends Anthill {
 	public void exitAnthill(Animal animal) {	
 
 
-		//Leave ant hill tracker
+		//Leave ant hill pointed to by locator
 		synchronized (animalLocator) {
 			animalLocator.get(animal).exitAnthill(animal);
 
-			//Remove from tracker
+			//Remove from locator
 			animalLocator.remove(animal);
 		}
 
