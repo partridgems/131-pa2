@@ -49,6 +49,32 @@ public class ScheduledAnthill extends Anthill {
 		animalLocator = new HashMap<Animal, Anthill>();
 
 	}	//End of constructor()
+	
+	protected ScheduledAnthill(String label, Collection<Anthill> basicAnthills) {
+
+		super(label, 0);
+
+		//Make this hill have the total of all subordinate ant hills
+		for (Anthill a : basicAnthills) {
+			this.ants += a.antsLeft();
+		}
+
+
+		//Keeps track of number of high priority animals waiting
+		highPriorityWaitCount = new ArrayList<Integer>(5);
+		for (int i = 0; i < 5; i++) {
+			highPriorityWaitCount.add(i, 0);
+		}
+		
+
+		//Maintaining reference to original object instead of creating a new local one
+		//in case the original object is used for logging purposes.
+		this.hills = basicAnthills;
+
+		//Tracker to locate animals efficiently for exiting
+		animalLocator = new HashMap<Animal, Anthill>();
+
+	}	//End of constructor()
 
 
 
