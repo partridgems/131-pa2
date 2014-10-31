@@ -1,10 +1,9 @@
 package edu.Brandeis.cs131.Ants.MichaelPartridge;
 
-import edu.Brandeis.cs131.Ants.AbstractAnts.Animal;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Colour;
 import edu.Brandeis.cs131.Ants.AbstractAnts.Log.AntLog;
 
-public class Anteater extends Animal {
+public class Anteater extends MyAnimal {
 
 	private static final int STARTING_HUNGER = 3;
 	private static final int SPEED = 4;
