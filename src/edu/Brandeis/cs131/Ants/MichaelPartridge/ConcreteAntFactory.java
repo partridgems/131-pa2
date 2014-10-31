@@ -41,6 +41,6 @@ public class ConcreteAntFactory implements AntFactory {
 
     @Override
     public Anthill createNewPreemptiveAnthill(String label, Collection<Anthill> basicAnthills) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    	return new ScheduledAnthill(label, basicAnthills);
     }
 }
