@@ -20,14 +20,17 @@ public abstract class MyAnimal extends Animal {
 	@Override
 	public void doWhileAtAnthill() {
 		boolean fed = false;
-		
+
 		while (!fed) {
 			try {
-				this.wait((10 - this.getSpeed()) * 100);
+				synchronized (this) {
+					this.wait((10 - this.getSpeed()) * 100);
+				}
+
 				this.eatAnt();
 				fed = true;
 			} catch (InterruptedException e) {
-				
+
 				//Animal interrupted by Exterminator
 				synchronized (this) {
 					try {
@@ -36,14 +39,14 @@ public abstract class MyAnimal extends Animal {
 						e1.printStackTrace();
 					}
 				}
-				
+
 			}	//End of interruption catch block
-			
+
 			/*At this point, if the animal is not fed due to being interrupted by the exterminator,
 			 * the animal will loop back and try waiting again
 			 */
 		}	//End of while(not fed)
-		
+
 	}
 
 
