@@ -10,29 +10,47 @@ import edu.Brandeis.cs131.Ants.AbstractAnts.Log.AntLog;
 public class BasicAnthill extends Anthill {
 
 	private ArrayList<Animal> localAnimals;
+	private ArrayList<Thread> localThreads;
 
 	public BasicAnthill(String name, int ants, AntLog log) {
 		super(name, ants, log);
 
 		localAnimals = new ArrayList<Animal>();
-		
+		localThreads = new ArrayList<Thread>();
+
 	}
 
 	public BasicAnthill(String name, int ants) {
 		super(name, ants);
 
 		localAnimals = new ArrayList<Animal>();
+		localThreads = new ArrayList<Thread>();
 
 	}
 
 	@Override
 	public synchronized boolean tryToEatAt(Animal animal) {
 
-		//Nobody can eat here if there are no more ants
+		//Nobody, including exterminators, eats here if no ants
 		if (this.antsLeft() == 0) {
 
 			return false;
 
+		} else if (animal instanceof Exterminator) {
+			//Check for any other Exterminators present
+			for (Animal a : localAnimals) {
+				if (a instanceof Exterminator) {
+					return false;
+				}
+			}
+			
+			//Cause all animals to stop eating
+			exterminate();
+			localAnimals.add(animal);
+			localThreads.add(Thread.currentThread());
+			return true;
+
+		//Nobody can eat here if there are no more ants
 		} else if (!colorCheck(animal)) {
 			//Checks for other animals of the same color
 
@@ -50,9 +68,10 @@ public class BasicAnthill extends Anthill {
 					return false;
 				}
 			}
-			
+
 			//Conditions met, enter anthill
 			localAnimals.add(animal);
+			localThreads.add(Thread.currentThread());
 			this.eatAnt();
 			return true;
 
@@ -63,15 +82,16 @@ public class BasicAnthill extends Anthill {
 					return false;
 				}
 			}
-			
+
 			//Conditions met, enter anthill
 			localAnimals.add(animal);
+			localThreads.add(Thread.currentThread());
 			this.eatAnt();
 			return true;
 
 		} else if (animal instanceof Armadillo) {
 			//Ensure at least one Aardvark or Anteater is present
-			
+
 			//Is anyone else here?
 			if (localAnimals.size() == 0) {
 				return false;
@@ -82,9 +102,10 @@ public class BasicAnthill extends Anthill {
 					return false;
 				}
 			}
-			
+
 			//Conditions met, enter anthill
 			localAnimals.add(animal);
+			localThreads.add(Thread.currentThread());
 			this.eatAnt();
 			return true;
 
@@ -114,9 +135,36 @@ public class BasicAnthill extends Anthill {
 
 	@Override
 	public synchronized void exitAnthill(Animal animal) {
-		
-		localAnimals.remove(animal);
 
+		localAnimals.remove(animal);
+		localThreads.remove(Thread.currentThread());
+		
+		//If exterminator is leaving, wake all waiting animals
+		if (animal instanceof Exterminator) {
+			endExtermination();
+		}
 	}
 
-}
+	/**
+	 * exterminate interrupts all currently feeding animals
+	 * those animals will resume eating once the exterminator leaves
+	 */
+	public void exterminate() {
+		for (Thread t : localThreads) {
+			t.interrupt();
+		}
+	}
+	
+	/**
+	 * endExtermination notifies all animals presumably sleeping on their own monitors
+	 * animals will loop and resume their eating wait
+	 */
+	public void endExtermination() {
+		for (Animal a : localAnimals) {
+			synchronized (a) {
+				a.notify();
+			}
+		}
+	}
+	
+}	//End of BasicAnthill class
