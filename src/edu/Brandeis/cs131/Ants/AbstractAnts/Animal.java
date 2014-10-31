@@ -120,4 +120,8 @@ public abstract class Animal implements Runnable {
             System.err.println("Interrupted Animal " + toString());
         }
     }
+    
+    public void eatAnt() {
+    	hunger--;
+    }
 }
