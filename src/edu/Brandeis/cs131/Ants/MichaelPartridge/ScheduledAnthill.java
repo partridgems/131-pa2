@@ -114,7 +114,12 @@ public class ScheduledAnthill extends Anthill {
 					synchronized (animalLocator) {
 						animalLocator.put(animal, anthill);
 					}
-					eatAnt();
+					
+					//Exterminators don't eat ants
+					if ( !(animal instanceof Exterminator) ) {
+						eatAnt();
+					}
+					
 					fed = true;
 					break;
 				}
