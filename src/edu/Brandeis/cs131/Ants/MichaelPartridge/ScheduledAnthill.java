@@ -82,7 +82,7 @@ public class ScheduledAnthill extends Anthill {
 			}
 
 			for (Anthill anthill : hills) {
-				if (anthill.tryToEatAt(animal)) {
+				if (anthill.attemptToEatAt(animal)) {
 
 					//Animal successfully eating
 					synchronized (animalLocator) {
@@ -146,7 +146,7 @@ public class ScheduledAnthill extends Anthill {
 
 		//Leave ant hill pointed to by locator
 		synchronized (animalLocator) {
-			animalLocator.get(animal).exitAnthill(animal);
+			animalLocator.get(animal).leaveAnthill(animal);
 
 			//Remove from locator
 			animalLocator.remove(animal);
